@@ -1,2 +1,0 @@
-# springboot-kubernetes
-springboot-kubernetes
