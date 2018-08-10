@@ -9,12 +9,21 @@ public class ConfigUtil {
     /*
     apiserver通讯地址
      */
-    private static final String APISERVER_URL = "https://192.168.56.101:8080";
+    private static final String APISERVER_URL = "http://192.168.56.101:8080";
 
-    public static KubernetesClient initKubernetesClint() {
+    public static KubernetesClient initKubernetesClient() {
         Config config = new ConfigBuilder()
                 .withMasterUrl(APISERVER_URL)
                 .build();
         return new DefaultKubernetesClient(config);
     }
+
+    public static KubernetesClient initKubernetesClient(String apiVersion) {
+        Config config = new ConfigBuilder()
+                .withMasterUrl(APISERVER_URL)
+                .withApiVersion(apiVersion)
+                .build();
+        return new DefaultKubernetesClient(config);
+    }
+
 }

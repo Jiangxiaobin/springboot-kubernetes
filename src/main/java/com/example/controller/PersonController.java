@@ -74,18 +74,10 @@ public class PersonController {
 
     @RequestMapping("/create")
     public void testCreateNamespace() {
-//        Config config = new Config();
-//        KubernetesClient kubernetesClient = new DefaultKubernetesClient("http://192.168.56.101:8080");
-//        Namespace ns = new Namespace();
-//        ns.setApiVersion("v1");
-//        ObjectMeta om = new ObjectMeta();
-//        om.setName("ns-fabric8");
-//        ns.setMetadata(om);
-//        kubernetesClient.namespaces().create(ns);
 
-        this.serviceAccountFacade.create();
-        this.deploymentFacade.createDeployment();
-        this.serviceFacade.createService();
+//        this.serviceAccountFacade.create();
+//        this.deploymentFacade.createHPA();
+        this.serviceFacade.create();
     }
 
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component("namespaceFacade")
 public class NamespaceFacade {
 
-    private KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClint();
+    private KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient();
 
     /**
      *  获取集群中所有命名空间
