@@ -21,10 +21,10 @@ public class ServiceFacade {
      */
     public void create() {
         //初始化客户端
-        kubernetesClient = ConfigUtil.initKubernetesClient("v1");
+//        kubernetesClient = ConfigUtil.initKubernetesClient("v1");
+        kubernetesClient = ConfigUtil.initKubernetesClient();
         //创建资源对象
         Service service = new ServiceBuilder()
-                .withApiVersion("v1")
                 .withKind("Service")
                 .withNewMetadata()
                     .withName("php-apache")

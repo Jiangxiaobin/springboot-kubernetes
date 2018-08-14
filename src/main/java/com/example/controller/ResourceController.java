@@ -1,15 +1,22 @@
 package com.example.controller;
 
 import com.example.facade.DeploymentFacade;
+import com.example.facade.EventFacade;
 import com.example.facade.IngressFacade;
 import com.example.facade.ServiceFacade;
+import com.example.utils.ConfigUtil;
 import com.example.utils.K8S_Constants;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +33,9 @@ public class ResourceController {
     @Autowired
     private IngressFacade ingressFacade;
 
+    @Autowired
+    private EventFacade eventFacade;
+
     /**
      * 新增Deployment
      */
@@ -33,6 +43,7 @@ public class ResourceController {
     public String createPHP_HPA_Application() {
         String name = "php-apache";
         String namespace = K8S_Constants.DEFAULT;
+
         /*
         创建Deployment资源
          */
@@ -137,6 +148,7 @@ public class ResourceController {
         System.out.println("-----------------------------------------------------");
         System.out.println("-----------------------------------------------------");
         System.out.println("-----------------------------------------------------");
+
         return null;
     }
 
@@ -196,5 +208,48 @@ public class ResourceController {
             return "成功啦！";
         else
             return "失败了。。。";
+    }
+
+    @RequestMapping("/createYaml")
+    public String createByYaml() {
+        KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient();
+
+        Deployment deployment = kubernetesClient.apps().deployments().load(getClass().getResourceAsStream("/yamls/hpa-deploy.yaml")).get();
+        HorizontalPodAutoscaler horizontalPodAutoscaler = kubernetesClient.autoscaling().horizontalPodAutoscalers().load(getClass().getResourceAsStream("/yamls/hpa-scale-v2beta1.yaml")).get();
+        Service service = kubernetesClient.services().load(getClass().getResourceAsStream("/yamls/hpa-service.yaml")).get();
+        Ingress ingress = kubernetesClient.extensions().ingresses().load(getClass().getResourceAsStream("/yamls/hpa-ingress.yaml")).get();
+        kubernetesClient.apps().deployments().create(deployment);
+        kubernetesClient.autoscaling().horizontalPodAutoscalers().create(horizontalPodAutoscaler);
+        kubernetesClient.services().create(service);
+        /*
+        The client is using resource type 'ingresses' with unstable version 'v1beta1'
+         */
+        kubernetesClient.extensions().ingresses().create(ingress);
+        return "成功啦！";
+    }
+
+    @RequestMapping("/watch")
+    public String testWatch() {
+        /*
+        添加监控
+         */
+        KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient();
+
+        while (true) {
+            Watch watch = kubernetesClient.apps().deployments().inNamespace("default").withName("php-apache").watch(new Watcher<Deployment>() {
+                @Override
+                public void eventReceived(Watcher.Action action, Deployment resource) {
+                    if (Action.DELETED.equals(action) || Action.MODIFIED.equals(action)) {
+                        System.out.println("哈哈哈哈哈！！！An event happens, the action is " + action.name() + " and the deployment's namespace is " + resource.getMetadata().getNamespace() + " and name is " + resource.getMetadata().getName());
+                    }
+                }
+
+                @Override
+                public void onClose(KubernetesClientException cause) {
+                    System.out.println("watch closed...");
+                }
+            });
+        }
+//        return "hello";
     }
 }

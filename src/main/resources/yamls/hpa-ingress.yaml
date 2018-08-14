@@ -1,0 +1,14 @@
+#apiVersion: extensions/v1beta1
+metadata:
+  name: php-apache
+  namespace: default
+kind: Ingress
+spec:
+  rules:
+    - host: php-apache.k8s3.paas.abc
+      http:
+        paths:
+          - path: /
+            backend:
+              servicePort: 80
+              serviceName: php-apache

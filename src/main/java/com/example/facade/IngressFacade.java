@@ -21,7 +21,8 @@ public class IngressFacade {
      */
     public void create() {
         //初始化客户端
-        KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient("extensions");
+//        KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient("extensions");
+        kubernetesClient = ConfigUtil.initKubernetesClient();
         //创建Ingress资源
         Ingress ingress = new IngressBuilder()
                 .withNewMetadata()

@@ -22,7 +22,9 @@ public class DeploymentFacade {
      */
     public void create() {
         //初始化客户端
-        kubernetesClient = ConfigUtil.initKubernetesClient("extensions");
+//        kubernetesClient = ConfigUtil.initKubernetesClient("extensions");
+        kubernetesClient = ConfigUtil.initKubernetesClient();
+//        kubernetesClient = ConfigUtil.initKubernetesClient("api");
         //创建model
         Deployment deployment = new DeploymentBuilder()
                 .withKind("Deployment")
@@ -59,6 +61,7 @@ public class DeploymentFacade {
                 .build();
         //在集群中创建deployment资源
         this.kubernetesClient.apps().deployments().create(deployment);
+        System.out.println("success??");
     }
 
     /**
@@ -112,4 +115,5 @@ public class DeploymentFacade {
         kubernetesClient = ConfigUtil.initKubernetesClient();
         return kubernetesClient.apps().deployments().inNamespace(namespace).withName(name).delete();
     }
+
 }
