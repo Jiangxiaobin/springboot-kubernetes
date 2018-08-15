@@ -15,11 +15,12 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.concurrent.CountDownLatch;
 
 @RestController
 @RequestMapping("/resource")
@@ -229,27 +230,63 @@ public class ResourceController {
     }
 
     @RequestMapping("/watch")
-    public String testWatch() {
+    public String testWatch() throws InterruptedException {
+        while (true) {
+            CountDownLatch closeLatch = new CountDownLatch(1);
         /*
         添加监控
          */
-        KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient();
+            KubernetesClient kubernetesClient = ConfigUtil.initKubernetesClient();
 
-        while (true) {
-            Watch watch = kubernetesClient.apps().deployments().inNamespace("default").withName("php-apache").watch(new Watcher<Deployment>() {
+        /*
+        监控Deployments
+         */
+            kubernetesClient.apps().deployments().inNamespace("default").watch(new Watcher<Deployment>() {
                 @Override
                 public void eventReceived(Watcher.Action action, Deployment resource) {
-                    if (Action.DELETED.equals(action) || Action.MODIFIED.equals(action)) {
-                        System.out.println("哈哈哈哈哈！！！An event happens, the action is " + action.name() + " and the deployment's namespace is " + resource.getMetadata().getNamespace() + " and name is " + resource.getMetadata().getName());
-                    }
+                    System.out.println("deployments eventReceived >>>>> "+action + " > " + resource);
                 }
 
                 @Override
                 public void onClose(KubernetesClientException cause) {
-                    System.out.println("watch closed...");
+                    if (cause != null)
+                        System.out.println("Deployment eventReceived >>>>> " + cause);
                 }
             });
+
+        /*
+        监控service
+         */
+            kubernetesClient.services().inNamespace("default").watch(new Watcher<Service>() {
+                @Override
+                public void eventReceived(Action action, Service resource) {
+                    System.out.println("services eventReceived >>>>> "+action + " > " + resource);
+                }
+
+                @Override
+                public void onClose(KubernetesClientException cause) {
+                    if (cause != null)
+                        System.out.println("services eventReceived >>>>> " + cause);
+                }
+            });
+
+        /*
+        监控ingress
+         */
+            kubernetesClient.extensions().ingresses().inNamespace("default").watch(new Watcher<Ingress>() {
+                @Override
+                public void eventReceived(Action action, Ingress resource) {
+                    System.out.println("ingresses eventReceived >>>>> "+action + " > " + resource);
+                }
+
+                @Override
+                public void onClose(KubernetesClientException cause) {
+                    if (cause != null)
+                        System.out.println("ingresses eventReceived >>>>> " + cause);
+                }
+            });
+
+            closeLatch.await();
         }
-//        return "hello";
     }
 }
